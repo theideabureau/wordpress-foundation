@@ -14,14 +14,14 @@ namespace TheIdeaBureau\WordPress\Foundation;
  * @param  array $args
  * @return array
  */
-class QueryLoop implements Iterator, Countable {
+class QueryLoop implements \Iterator, \Countable {
 
 	public $post_ids = array();
 
 	public function __construct($args = array()) {
 
 		// init WP_Query
-		$this->query = new WP_Query($args);
+		$this->query = new \WP_Query($args);
 
 		// compile a list of post_ids
 		foreach ( $this->query->posts as $post ) {
@@ -60,11 +60,12 @@ class QueryLoop implements Iterator, Countable {
 		}
 	}
 
-	function havePosts() {
+	// deliberately not using PSR name standards to fit in with WP
+	function have_posts() {
 		return $this->query->have_posts();
 	}
 
-	function hasNextPage() {
+	function has_next_page() {
 
 		$current_page = $this->query->query_vars['paged'] > 0 ? $this->query->query_vars['paged'] : 1;
 		$max_pages = (int) $this->query->max_num_pages;
