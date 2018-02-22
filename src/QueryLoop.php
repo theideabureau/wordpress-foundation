@@ -1,5 +1,7 @@
 <?php
 
+namespace TheIdeaBureau\WordPress\Foundation;
+
 /**
  * An improved version of WP_Query
  *
