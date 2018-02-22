@@ -1,0 +1,19 @@
+{
+    "name": "theideabureau/wordpress-foundation",
+    "description": "A collection of classes to base WordPress theme functionality on",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "TheIdeaBureau\\WordPress\\Foundation\\": "src"
+        }
+    },
+    "homepage": "https://github.com/theideabureau/wordpress-foundation",
+    "authors": [
+        {
+            "name": "Ben Everard",
+            "email": "ben@theideabureau.co",
+            "homepage": "https://theideabureau.co"
+        }
+    ]
+
+}
