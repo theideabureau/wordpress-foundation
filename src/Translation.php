@@ -10,7 +10,19 @@ class Translation {
 
 	private static $instance = null;
 
-	private function __construct() {
+	private function __construct() {}
+
+	public static function getInstance() {
+
+		if ( self::$instance == null ) {
+			self::$instance = new Translation();
+		}
+
+		return self::$instance;
+
+	}
+
+	public function initHooks() {
 
 		add_action('save_post', [$this, 'deletePostTranslations']);
 		add_action('save_post', [$this, 'duplicatePost'], 999, 1);
@@ -41,16 +53,6 @@ class Translation {
 			}, 999, 3);
 
 		}
-
-	}
-
-	public static function getInstance() {
-
-		if ( self::$instance == null ) {
-			self::$instance = new Translation();
-		}
-
-		return self::$instance;
 
 	}
 
@@ -208,7 +210,7 @@ class Translation {
 
 		// throw an error if the Google API Key is not defined
 		if ( ! defined('GOOGLE_TRANSLATE_API_KEY') ) {
-			throw new Exception('Google Translate API key not valid.');
+			throw new \Exception('Google Translate API key not valid.');
 			exit;
 		}
 
@@ -220,7 +222,7 @@ class Translation {
 
 		 	$content = $this->googleTranslate($content, $language_code);
 
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 
 			// output the failure to the error log
 			error_log('Translation Failed: ' . $e->getMessage(), 0);
@@ -271,7 +273,7 @@ class Translation {
 
 		// throw an error if the response returns an error
 		if ( isset($responseDecoded['error']) ) {
-			throw new Exception($responseDecoded['error']['message']);
+			throw new \Exception($responseDecoded['error']['message']);
 			return $content;
 		}
 
@@ -294,6 +296,27 @@ class Translation {
 		}
 
 		return ! empty(get_post_meta($post_id, '_icl_lang_duplicate_of', TRUE));
+
+	}
+
+	/**
+	 * fetch either the translation parent id, or itself
+	 * @param  int $post_id the post id to check
+	 * @return int
+	 */
+	function getTranslationParentId($post_id = NULL) {
+
+		if ( ! $post_id ) {
+			$post_id = get_the_ID();
+		}
+
+		$duplicate_of = get_post_meta($post_id, '_icl_lang_duplicate_of', TRUE);
+
+		if ( ! empty($duplicate_of) ) {
+			return $duplicate_of;
+		}
+
+		return $post_id;
 
 	}
 
@@ -396,6 +419,10 @@ class Translation {
 			return $content;
 		}
 
+		if ( $this->ignoreSpecficTranslation($post_id, $key) ) {
+			return $content;
+		}
+
 		// return the original title is we're not a translatable post type
 		if ( ! $this->isTranslatablePostType(get_post_type($post_id)) ) {
 			return $content;
@@ -412,6 +439,22 @@ class Translation {
 		}
 
 		return $this->translateContent($content, $post_id, $key, $this->getLanguageCode());
+
+	}
+
+	/**
+	 * fetch the translatable custom fields from the wordpress filter
+	 * @param  int    $post_id the post id for the given object
+	 * @param  string $key     the translation key
+	 * @return array           an array of custom fields to translate
+	 */
+	function ignoreSpecficTranslation(int $post_id, string $key) {
+
+		$ignored_posts = apply_filters('translation_ignore_specific', []);
+
+		$parent_id = $this->getTranslationParentId($post_id);
+
+		return array_search($parent_id . '_' . $key, $ignored_posts) !== FALSE;
 
 	}
 
