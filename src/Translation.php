@@ -348,7 +348,7 @@ class Translation {
 		$wpml_post_types = apply_filters('wpml_setting', [], 'custom_posts_sync_option');
 
 		// if the post type exists within the setting, and is "1", it is translatable
-		return isset($wpml_post_types[$post_type]) && $wpml_post_types[$post_type] == 1;
+		return isset($wpml_post_types[$post_type]) && ($wpml_post_types[$post_type] == 1 || $wpml_post_types[$post_type] == 2);
 
 	}
 
