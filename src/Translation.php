@@ -259,21 +259,6 @@ class Translation {
 	}
 
 	/**
-	 * checks if the given post is a duplicate of another
-	 * @param  int $post_id the post id to check
-	 * @return boolean      the result
-	 */
-	function isPostDuplicate($post_id = NULL) {
-
-		if ( ! $post_id ) {
-			$post_id = get_the_ID();
-		}
-
-		return ! empty(get_post_meta($post_id, '_icl_lang_duplicate_of', TRUE));
-
-	}
-
-	/**
 	 * fetch either the translation parent id, or itself
 	 * @param  int $post_id the post id to check
 	 * @return int
