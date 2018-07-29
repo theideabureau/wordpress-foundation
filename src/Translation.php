@@ -295,21 +295,6 @@ class Translation {
 	}
 
 	/**
-	 * checks if the post is a duplicate of another language
-	 * @param int $post_id
-	 * @return boolean
-	 */
-	function isGoogleTranslatible(int $post_id = NULL) {
-
-		if ( ! $post_id ) {
-			$post_id = get_the_ID();
-		}
-
-		return $this->isPostDuplicate($post_id);
-
-	}
-
-	/**
 	 * returns a boolean if the given post type is translatable
 	 * @param string $language
 	 * @param int $post_id
@@ -351,11 +336,6 @@ class Translation {
 
 		// return the original title is we're not a translatable post type
 		if ( ! $this->isTranslatablePostType(get_post_type($post_id)) ) {
-			return $content;
-		}
-
-		// if the post is not a duplicate, return the original
-		if ( ! $this->isGoogleTranslatible($post_id) ) {
 			return $content;
 		}
 
