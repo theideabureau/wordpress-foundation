@@ -379,12 +379,12 @@ class Translation {
 	 * @param  int     $post_id the post id for the field post
 	 * @return boolean          whether the field is translatable
 	 */
-	function isFieldTranslatable(string $field, int $post_id) {
+	function isFieldTranslatable($field, int $post_id) {
 
 		// get all translatable fields for this post id
 		$translatable_fields = $this->getTranslatableFields($post_id);
 
-		return in_array($field, $translatable_fields);
+		return in_array($field['key'], $translatable_fields) || in_array($field['__key'], $translatable_fields);
 
 	}
 
