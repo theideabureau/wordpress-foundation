@@ -26,6 +26,7 @@ class Translation {
 
 		add_action('save_post', [$this, 'deletePostTranslations']);
 		add_action('save_post', [$this, 'duplicatePost'], 999, 1);
+		add_action('acf/render_field_settings', [$this, 'addFieldTranslationOption']);
 
 		if ( ! is_admin() ) {
 
@@ -479,6 +480,23 @@ class Translation {
 		$translatable_fields = $this->getTranslatableFields($post_id);
 
 		return in_array($field, $translatable_fields);
+
+	}
+
+	/**
+	 * Add "Translate field" option to ACF field, can then be used to translate
+	 * specific custom fields
+	 * @param string $field the field within the ACF group
+	 */
+	function addFieldTranslationOption($field) {
+
+		acf_render_field_setting($field, array(
+			'label' => __('Translate field?'),
+			'instructions' => '',
+			'name' => 'translate_field',
+			'type' => 'true_false',
+			'ui' => 1
+		), true);
 
 	}
 
