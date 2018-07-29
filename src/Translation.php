@@ -26,7 +26,10 @@ class Translation {
 
 		add_action('save_post', [$this, 'deletePostTranslations']);
 		add_action('save_post', [$this, 'duplicatePost'], 999, 1);
+
+		// ACF integration
 		add_action('acf/render_field_settings', [$this, 'addFieldTranslationOption']);
+		add_action('acf/load_field', [$this, 'addTranslatableFieldLabel']);
 
 		if ( ! is_admin() ) {
 
@@ -486,18 +489,32 @@ class Translation {
 	/**
 	 * Add "Translate field" option to ACF field, can then be used to translate
 	 * specific custom fields
-	 * @param string $field the field within the ACF group
+	 * @param array $field the field object
 	 */
-	function addFieldTranslationOption($field) {
+	 function addFieldTranslationOption($field) {
 
-		acf_render_field_setting($field, array(
-			'label' => __('Translate field?'),
-			'instructions' => '',
-			'name' => 'translate_field',
-			'type' => 'true_false',
-			'ui' => 1
-		), true);
+ 		acf_render_field_setting($field, array(
+ 			'label' => __('Automatically translate field?'),
+ 			'instructions' => 'Can this field be automatically translated by Google?',
+ 			'name' => 'translate_field',
+ 			'type' => 'true_false',
+ 			'ui' => 1
+ 		), true);
 
-	}
+ 	}
+
+	/**
+	 * Add a flag character to the label of fields tha can be automatically translated
+	 * @param array $field the field object
+	 */
+ 	function addTranslatableFieldLabel($field) {
+
+ 		if ( isset($field['translate_field']) && $field['translate_field'] == 1 ) {
+ 			$field['label'] .= ' ⚑';
+ 		}
+
+ 	    return $field;
+
+ 	}
 
 }
