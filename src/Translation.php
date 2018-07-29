@@ -380,28 +380,28 @@ class Translation {
 	 */
 	 function addFieldTranslationOption($field) {
 
- 		acf_render_field_setting($field, array(
- 			'label' => __('Automatically translate field?'),
- 			'instructions' => 'Can this field be automatically translated by Google?',
- 			'name' => 'translate_field',
- 			'type' => 'true_false',
- 			'ui' => 1
- 		), true);
+		acf_render_field_setting($field, array(
+			'label' => __('Automatically translate field?'),
+			'instructions' => 'Can this field be automatically translated by Google?',
+			'name' => 'translate_field',
+			'type' => 'true_false',
+			'ui' => 1
+		), true);
 
- 	}
+	}
 
 	/**
 	 * Add a flag character to the label of fields tha can be automatically translated
 	 * @param array $field the field object
 	 */
- 	function addTranslatableFieldLabel($field) {
+	function addTranslatableFieldLabel($field) {
 
- 		if ( isset($field['translate_field']) && $field['translate_field'] == 1 ) {
- 			$field['label'] .= ' ⚑';
- 		}
+		if ( isset($field['translate_field']) && $field['translate_field'] == 1 ) {
+			$field['label'] .= ' ⚑';
+		}
 
- 	    return $field;
+		return $field;
 
- 	}
+	}
 
 }
