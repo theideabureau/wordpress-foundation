@@ -193,6 +193,64 @@ class Translation {
 	}
 
 	/**
+	 * return a cached translation if there is one, otherwise translate the string
+	 * @param  string $string the content to translate
+	 * @param  string $key    the cache content key
+	 * @return string         the translated content
+	 */
+	function translateString(string $string, string $key, string $language_code) {
+
+		// if the dtring is empty, don't attempt to translate
+		if ( empty($string) ) {
+			return $string;
+		}
+
+		// if the language is english, don't bother translating anything
+		if ( $this->getLanguageCode() === 'en' ) {
+			return $string;
+		}
+
+		// don't translate this is we want to view the original
+		if ( isset($_GET['view_original']) ) {
+			return $string;
+		}
+
+		// check for a cached translation to return
+		if ( $cached_translation = get_option($this->makeKey($language_code, $key)) ) {
+			return $cached_translation;
+		}
+
+		// throw an error if the Google API Key is not defined
+		if ( ! defined('GOOGLE_TRANSLATE_API_KEY') ) {
+			throw new \Exception('Google Translate API key not valid.');
+			exit;
+		}
+
+		// if GoogleTranslate throws an error, return the original untranslated content
+		try {
+
+			// output the transaction to the error log
+			error_log('Translated ' . $key . ' (' . strlen($content) . ')', 0);
+
+		 	$content = $this->googleTranslate($string, $language_code);
+
+		} catch (\Exception $e) {
+
+			// output the failure to the error log
+			error_log('Translation Failed: ' . $e->getMessage(), 0);
+
+			return $content;
+
+		}
+
+		// store the translation in the meta
+		update_option($this->makeKey($language_code, $key), $content);
+
+		return $content;
+
+	}
+
+	/**
 	 * return a cached translation if there is one, otherwise translate the content
 	 * @param  string $content the content to translate
 	 * @param  int    $post_id the wordpress post id
