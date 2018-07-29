@@ -83,8 +83,32 @@ class Translation {
 	 */
 	function translateCustomFields($value, $post_id, $field) {
 
-		if ( $this->isFieldTranslatable($field['name'], (int) $post_id) && $this->isTranslatablePostType(get_post_type($post_id)) ) {
-			$value = $this->translateFilter(apply_filters('acf_the_content', $value), $post_id, $field['name']);
+		if ( isset($field['translate_field']) && $field['translate_field'] == 1 ) {
+
+			switch ( $field['type'] ) {
+
+				case 'link':
+
+					if ( is_array($value) ) {
+						$value['title'] = $this->translateFilter($value['title'], $post_id, $field['name']);
+					}
+
+					break;
+
+				case 'textarea':
+					$value = $this->translateFilter($value, $post_id, $field['name']);
+					break;
+
+				case 'text':
+					$value = $this->translateFilter($value, $post_id, $field['name']);
+					break;
+
+				case 'wysiwyg':
+					$value = $this->translateFilter(apply_filters('acf_the_content', $value), $post_id, $field['name']);
+					break;
+
+			}
+
 		}
 
 		return $value;
