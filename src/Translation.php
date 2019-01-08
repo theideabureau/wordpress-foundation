@@ -341,6 +341,21 @@ class Translation {
 	}
 
 	/**
+	 * detect if the post is a duplicate of another
+	 * @param  int $post_id the post id to check
+	 * @return boolean
+	 */
+	function isDuplicate($post_id = NULL) {
+
+		if ( ! $post_id ) {
+			$post_id = get_the_ID();
+		}
+
+		return metadata_exists('post', $post_id, '_icl_lang_duplicate_of');
+
+	}
+
+	/**
 	 * fetch either the translation parent id, or itself
 	 * @param  int $post_id the post id to check
 	 * @return int
@@ -351,13 +366,22 @@ class Translation {
 			$post_id = get_the_ID();
 		}
 
-		$duplicate_of = get_post_meta($post_id, '_icl_lang_duplicate_of', TRUE);
+		return apply_filters('wpml_object_id', $post_id, get_post_type($post_id), true, 'en');
 
-		if ( ! empty($duplicate_of) ) {
-			return $duplicate_of;
+	}
+
+	/**
+	 * determine if the post should be automatically translated
+	 * @param  int $post_id the post id to check
+	 * @return boolean
+	 */
+	function isPostTranslatable($post_id = NULL) {
+
+		if ( ! $post_id ) {
+			$post_id = get_the_ID();
 		}
 
-		return $post_id;
+		return $this->getLanguageCode() !== 'en' && ( $this->isDuplicate() || $post_id === $this->getTranslationParentId() );
 
 	}
 
@@ -394,6 +418,10 @@ class Translation {
 
 		// if the language is english, don't bother translating anything
 		if ( $this->getLanguageCode() === 'en' ) {
+			return $content;
+		}
+
+		if ( ! $this->isPostTranslatable($post_id) ) {
 			return $content;
 		}
 
