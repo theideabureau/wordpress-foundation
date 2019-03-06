@@ -381,7 +381,7 @@ class Translation {
 			$post_id = get_the_ID();
 		}
 
-		return $this->getLanguageCode() !== 'en' && ( $this->isDuplicate() || $post_id === $this->getTranslationParentId() );
+		return $this->getLanguageCode() !== 'en' && ( $this->isDuplicate() || $post_id === $this->getTranslationParentId($post_id) );
 
 	}
 
