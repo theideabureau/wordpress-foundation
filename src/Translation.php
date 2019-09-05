@@ -193,6 +193,39 @@ class Translation {
 	}
 
 	/**
+	 * attempts to fetch manually corrected translations
+	 * @param  string  $string the content to translate
+	 * @return mixed           the translated string or false
+	 */
+	function getCorrectedTranslation(string $string) {
+
+		// fetch the google translate corrections array
+		$translations = get_field('google_translate_correction', 'options');
+
+		// if the translations don't exist return false
+		if ( ! $translations ) {
+			return false;
+		}
+
+		// attempt to find and return the translated text
+		foreach ( $translations as $translation ) {
+
+			// compare the strings lower case and trimmed, some strings on the
+			// front end are uppercase (css text-transform) and may be copied
+			// with their case, this helps match them up
+
+			if ( strtolower(trim($translation['english'])) === strtolower(trim($string)) ) {
+				return $translation['translated'];
+			}
+
+		}
+
+		// return false so the caller knows to continue
+		return false;
+
+	}
+
+	/**
 	 * return a cached translation if there is one, otherwise translate the string
 	 * @param  string $string the content to translate
 	 * @param  string $key    the cache content key
@@ -213,6 +246,11 @@ class Translation {
 		// don't translate this is we want to view the original
 		if ( isset($_GET['view_original']) ) {
 			return $string;
+		}
+
+		// check if there is a google translate correction before continuing
+		if ( $correction = $this->getCorrectedTranslation($string) ) {
+			return $correction;
 		}
 
 		// check for a cached translation to return
@@ -258,6 +296,11 @@ class Translation {
 	 * @return string          the translated content
 	 */
 	function translateContent(string $content, int $post_id, string $key, string $language_code) {
+
+		// check if there is a google translate correction before continuing
+		if ( $correction = $this->getCorrectedTranslation($content) ) {
+			return $correction;
+		}
 
 		// check for a cached translation to return
 		if ( $cached_translation = get_post_meta($post_id, $this->makeKey($language_code, $key), TRUE) ) {
