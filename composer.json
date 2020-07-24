@@ -1,6 +1,6 @@
 {
     "name": "theideabureau/wordpress-foundation",
-	"version": "1.0.3",
+	"version": "1.0.4",
     "description": "A collection of classes to base WordPress theme functionality on",
     "license": "MIT",
     "autoload": {

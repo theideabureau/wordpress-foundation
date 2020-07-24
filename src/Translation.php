@@ -188,8 +188,8 @@ class Translation {
 	 * @param  string $key           the key descriptor
 	 * @return string                the translation key in the appropriate format
 	 */
-	protected function makeKey(string $language_code, string $key) {
-		return 'translation_' . $language_code . '_' . $key;
+	protected function makeKey(string $source_language_code, string $target_language_code, string $key) {
+		return implode('_', ['translation', $source_language_code, $target_language_code, $key]);
 	}
 
 	/**
@@ -231,7 +231,7 @@ class Translation {
 	 * @param  string $key    the cache content key
 	 * @return string         the translated content
 	 */
-	function translateString(string $string, string $key, string $language_code) {
+	function translateString(string $string, string $key, string $source_language_code, string $target_language_code) {
 
 		// if the dtring is empty, don't attempt to translate
 		if ( empty($string) ) {
@@ -254,7 +254,7 @@ class Translation {
 		}
 
 		// check for a cached translation to return
-		if ( $cached_translation = get_option($this->makeKey($language_code, $key)) ) {
+		if ( $cached_translation = get_option($this->makeKey($source_language_code, $target_language_code, $key)) ) {
 			return $cached_translation;
 		}
 
@@ -270,7 +270,7 @@ class Translation {
 			// output the transaction to the error log
 			error_log('Translated ' . $key . ' (' . strlen($content) . ')', 0);
 
-		 	$content = $this->googleTranslate($string, $language_code);
+			$content = $this->googleTranslate($string, $source_language_code, $target_language_code);
 
 		} catch (\Exception $e) {
 
@@ -282,7 +282,7 @@ class Translation {
 		}
 
 		// store the translation in the meta
-		update_option($this->makeKey($language_code, $key), $content);
+		update_option($this->makeKey($source_language_code, $target_language_code, $key), $content);
 
 		return $content;
 
@@ -295,7 +295,7 @@ class Translation {
 	 * @param  string $key     the cache content key
 	 * @return string          the translated content
 	 */
-	function translateContent(string $content, int $post_id, string $key, string $language_code) {
+	function translateContent(string $content, int $post_id, string $key, string $source_language_code, string $target_language_code) {
 
 		// check if there is a google translate correction before continuing
 		if ( $correction = $this->getCorrectedTranslation($content) ) {
@@ -303,7 +303,7 @@ class Translation {
 		}
 
 		// check for a cached translation to return
-		if ( $cached_translation = get_post_meta($post_id, $this->makeKey($language_code, $key), TRUE) ) {
+		if ( $cached_translation = get_post_meta($post_id, $this->makeKey($source_language_code, $target_language_code, $key), TRUE) ) {
 			return $cached_translation;
 		}
 
@@ -319,7 +319,7 @@ class Translation {
 			// output the transaction to the error log
 			error_log('Translated ' . $post_id . '_' . $key . ' (' . strlen($content) . ')', 0);
 
-		 	$content = $this->googleTranslate($content, $language_code);
+		 	$content = $this->googleTranslate($content, $source_language_code, $target_language_code);
 
 		} catch (\Exception $e) {
 
@@ -331,7 +331,7 @@ class Translation {
 		}
 
 		// store the translation in the meta
-		update_post_meta($post_id, $this->makeKey($language_code, $key), $content);
+		update_post_meta($post_id, $this->makeKey($source_language_code, $target_language_code, $key), $content);
 
 		return $content;
 
@@ -342,7 +342,7 @@ class Translation {
 	 * @param string $content the content to be translated
 	 * @return json $result
 	 */
-	function googleTranslate(string $content, string $language_code) {
+	function googleTranslate(string $content, string $source_language_code, string $target_language_code) {
 
 		// the Google Translate endpoint
 		$url = 'https://www.googleapis.com/language/translate/v2';
@@ -353,8 +353,8 @@ class Translation {
 		// set the post fields
 		curl_setopt($ch, CURLOPT_POSTFIELDS, [
 			'key' => GOOGLE_TRANSLATE_API_KEY,
-			'source' => 'en',
-			'target' => $language_code,
+			'source' => $source_language_code,
+			'target' => $target_language_code,
 			'format' => 'html',
 			'q' => $content
 		]);
@@ -388,14 +388,34 @@ class Translation {
 	 * @param  int $post_id the post id to check
 	 * @return boolean
 	 */
-	function isDuplicate($post_id = NULL) {
+	function getDuplicateOfId($post_id = NULL) {
 
 		if ( ! $post_id ) {
 			$post_id = get_the_ID();
 		}
 
-		return metadata_exists('post', $post_id, '_icl_lang_duplicate_of');
+		if ( ! metadata_exists('post', $post_id, '_icl_lang_duplicate_of') ) {
+			return false;
+		}
 
+		return get_post_meta($post_id, '_icl_lang_duplicate_of', true);
+
+	}
+
+	/**
+	 * detect if the post is a duplicate of another
+	 * @param  int $post_id the post id to check
+	 * @return boolean
+	 */
+	function getPostLanguage($post_id = NULL)
+	{
+		if ( ! $post_id ) {
+			$post_id = get_the_ID();
+		}
+
+		$post_details = apply_filters('wpml_post_language_details', NULL, $post_id);
+
+		return $post_details['language_code'];
 	}
 
 	/**
@@ -418,14 +438,13 @@ class Translation {
 	 * @param  int $post_id the post id to check
 	 * @return boolean
 	 */
-	function isPostTranslatable($post_id = NULL) {
-
+	function isPostTranslatable($post_id = NULL)
+	{
 		if ( ! $post_id ) {
 			$post_id = get_the_ID();
 		}
 
-		return $this->getLanguageCode() !== 'en' && ( $this->isDuplicate() || $post_id === $this->getTranslationParentId($post_id) );
-
+		return $this->getDuplicateOfId() !== false;
 	}
 
 	/**
@@ -459,11 +478,6 @@ class Translation {
 			return $content;
 		}
 
-		// if the language is english, don't bother translating anything
-		if ( $this->getLanguageCode() === 'en' ) {
-			return $content;
-		}
-
 		if ( ! $this->isPostTranslatable($post_id) ) {
 			return $content;
 		}
@@ -482,7 +496,18 @@ class Translation {
 			return $content;
 		}
 
-		return $this->translateContent($content, $post_id, $key, $this->getLanguageCode());
+		// get original post id
+		$original_id = $this->getDuplicateOfId($post_id);
+
+		// get the original post language
+		$original_language = $this->getPostLanguage($original_id);
+
+		// return if the original and current languages are the same
+		if ( $original_language === $this->getLanguageCode() ) {
+			return $content;
+		}
+
+		return $this->translateContent($content, $post_id, $key, $original_language, $this->getLanguageCode());
 
 	}
 
