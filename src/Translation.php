@@ -394,6 +394,10 @@ class Translation {
 			$post_id = get_the_ID();
 		}
 
+		if ( $this->getPostLanguage($post_id) !== $this->getLanguageCode() ) {
+			return true;
+		}
+
 		if ( ! metadata_exists('post', $post_id, '_icl_lang_duplicate_of') ) {
 			return false;
 		}
@@ -414,6 +418,10 @@ class Translation {
 		}
 
 		$post_details = apply_filters('wpml_post_language_details', NULL, $post_id);
+
+		if (is_wp_error($post_details)) {
+			return 'en';
+		}
 
 		return $post_details['language_code'];
 	}
@@ -501,6 +509,10 @@ class Translation {
 
 		// get the original post language
 		$original_language = $this->getPostLanguage($original_id);
+
+		if ( ! $original_language ) {
+			return $content;
+		}
 
 		// return if the original and current languages are the same
 		if ( $original_language === $this->getLanguageCode() ) {
