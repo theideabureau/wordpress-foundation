@@ -475,11 +475,15 @@ class Translation {
 	/**
 	 * takes content from filters and runs them through the translation mechanism
 	 * @param  string 	$content 	the content to be translated
-	 * @param  int 		$post_id 	the id of the post content to be translated
+	 * @param  mixed	$post_id 	the id of the post content to be translated
 	 * @param  string 	$key 		the field type to be used as the cache key
 	 * @return string 				the translated content
 	 */
-	function translateFilter(string $content, int $post_id, string $key) {
+	function translateFilter(string $content, $post_id, string $key) {
+
+		if ($post_id === null) {
+			return $content;
+		}
 
 		// if the content is empty, don't attempt to translate
 		if ( empty($content) ) {
