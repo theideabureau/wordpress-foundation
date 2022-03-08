@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<ruleset name="PHP_CodeSniffer">
+
+    <description>PHP Code Sniffer configuration file.</description>
+
+    <file>src</file>
+
+    <!-- Our base rule: set to PSR12-->
+    <rule ref="PSR12">
+        <exclude name="PSR1.Methods.CamelCapsMethodName"/>
+	</rule>
+
+</ruleset>
